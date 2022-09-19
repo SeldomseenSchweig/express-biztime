@@ -26,10 +26,14 @@ router.get('/:code', async (req,res,next)=>{
         const {code} =  req.params;
         const results = await db.query(`SELECT * FROM companies WHERE code = $1`,
         [code]);
+        let cInvoices = await db.query(`SELECT * FROM invoices WHERE comp_code = $1`,
+        [code]);
+       cInvoices =  cInvoices.rows
         if(results.rows.length === 0){
-          throw new ExpressError("Can't find user with that ID", 404)
+          throw new ExpressError("Can't find company with that code", 404)
         }
-        return res.json({company:results.rows[0]});
+        let compans = results.rows[0]
+        return res.json({company:{ code: compans.code, name:compans.name, description:compans.description, invoices:{invoices:cInvoices}}});
     
     } catch (error) {
         return next(error)
@@ -76,7 +80,7 @@ router.patch('/:code', async (req,res,next)=>{
         RETURNING  code, name, description`,
         [code, name, description]);
         if(results.rows.length === 0){
-            throw new ExpressError("Can't find user with that ID", 404)
+            throw new ExpressError("Can't find company with that code", 404)
           }
         return res.json({company:results.rows[0]});
     
@@ -97,10 +101,10 @@ router.patch('/:code', async (req,res,next)=>{
     
         try {
             const {code} =  req.params;
-            let results = await db.query('DELETE FROM companies WHERE id=$1',
+            let results = await db.query('DELETE FROM companies WHERE code=$1',
             [code]);
             if(results.rows.length === 0){
-                throw new ExpressError("Can't find user with that ID", 404)
+                throw new ExpressError("Can't find company with that code", 404)
               }
             return res.send({status:"deleted"});
         
