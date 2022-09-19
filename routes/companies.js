@@ -48,10 +48,7 @@ router.get('/:code', async (req,res,next)=>{
 router.post('/', async (req,res,next)=>{
     try {
         const {code, name, description} = req.body;
-        const results = await db.query(`INSERT INTO users (code, name, description) VALUES ($1,$2,$3) RETURNING  code, name, description`, [code, name, description])
-        if(results.rows.length === 0){
-            throw new ExpressError("Can't find user with that ID", 404)
-          }
+        const results = await db.query(`INSERT INTO companies (code, name, description) VALUES ($1,$2,$3) RETURNING  code, name, description`, [code, name, description]);
         return res.status(201).json({company:results.rows[0]})
     
     } catch (error) {
@@ -70,13 +67,17 @@ router.post('/', async (req,res,next)=>{
 
 // Returns update company object: {company: {code, name, description}}
 router.patch('/:code', async (req,res,next)=>{
-    
+    let {code} = req.params;
+
     try {
-        const {code, name, description} = req.body;
+        const {name, description} = req.body;
         const results = await db.query(`UPDATE companies SET code=$1, name=$2, description=$3 
         WHERE code = $1 
         RETURNING  code, name, description`,
         [code, name, description]);
+        if(results.rows.length === 0){
+            throw new ExpressError("Can't find user with that ID", 404)
+          }
         return res.json({company:results.rows[0]});
     
     } catch (error) {
@@ -96,8 +97,11 @@ router.patch('/:code', async (req,res,next)=>{
     
         try {
             const {code} =  req.params;
-            await db.query('DELETE FROM users WHERE id=$1',
+            let results = await db.query('DELETE FROM companies WHERE id=$1',
             [code]);
+            if(results.rows.length === 0){
+                throw new ExpressError("Can't find user with that ID", 404)
+              }
             return res.send({status:"deleted"});
         
         } catch (error) {
